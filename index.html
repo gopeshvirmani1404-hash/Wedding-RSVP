@@ -51,6 +51,18 @@ input::placeholder,textarea::placeholder{color:#a1968e}
 #submitButton{display:block;width:100%;min-height:56px;margin-top:24px;padding:14px 22px;border:1px solid #a96f5c;border-radius:999px;background:linear-gradient(105deg,#c18f7b,#a96f5c);color:#fffdf9;font:600 17px Georgia,'Times New Roman',serif;letter-spacing:.02em;cursor:pointer;box-shadow:0 5px 14px rgba(169,111,92,.16);transition:filter .15s,transform .15s}
 #submitButton:hover{filter:brightness(1.04)}#submitButton:active{transform:translateY(1px)}#submitButton:disabled{opacity:.65;cursor:wait}
 #formStatus{margin:15px 0 0;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}#formStatus:empty{display:none}
+
+.confirmation{max-width:620px;margin:10px auto 0;padding:clamp(25px,5vw,42px) clamp(18px,4vw,34px);text-align:center;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#fffaf7,#fff3ee);box-shadow:0 12px 35px rgba(94,62,48,.06);animation:confirmIn .45s ease both}
+.confirmation[hidden]{display:none!important}
+.confirmation-mark{display:grid;place-items:center;width:76px;height:76px;margin:0 auto 18px;border:1px solid #e8cfc2;border-radius:50%;background:#fffdfa;color:var(--gold-dark);font:38px/1 Georgia,'Times New Roman',serif;box-shadow:0 5px 18px rgba(179,138,85,.12)}
+.confirmation h2{margin:0 0 12px;font-size:clamp(30px,5vw,40px)}
+.confirmation p{max-width:460px;margin:0 auto;color:var(--muted);font:16px/1.75 Georgia,'Times New Roman',serif}
+.confirmation .confirm-names{margin-top:10px;color:var(--ink);font-size:18px}
+.confirmation-divider{margin:22px auto 16px;color:var(--gold);letter-spacing:.25em;font-size:20px}
+.confirmation-note{font:12px/1.6 Arial,Helvetica,sans-serif!important;color:var(--muted)!important}
+@keyframes confirmIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.confirmation{animation:none}}
+
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 10px 0;letter-spacing:.025em}
 @media(max-width:600px){
  .page{width:calc(100% - 18px);margin:10px auto 24px}
@@ -133,6 +145,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px 10px 0;l
       <button type="submit" id="submitButton">♡ Confirm My RSVP ♡</button>
       <p id="formStatus" role="status" aria-live="polite"></p>
     </form>
+    <section id="confirmationScreen" class="confirmation" aria-live="polite" tabindex="-1" hidden>
+      <div class="confirmation-mark" aria-hidden="true">♡</div>
+      <h2>Thank you, <span id="confirmationName">dear friend</span>!</h2>
+      <p>We’re so happy you’re part of our celebrations. Your love and wishes mean the world to us.</p>
+      <p class="confirm-names">With love,<br><strong>Gopesh &amp; Prachi</strong></p>
+      <div class="confirmation-divider" aria-hidden="true">✦ ❧ ✦</div>
+      <p class="confirmation-note">4–5 December 2026<br>We can’t wait to celebrate together. 💗</p>
+    </section>
   </section>
   <footer>With love, Gopesh &amp; Prachi · 4–5 December 2026</footer>
 </main>
@@ -142,6 +162,9 @@ const RSVP_ENDPOINT = "https://script.google.com/macros/s/AKfycbzcVXCh05cffIuum4
 const form = document.getElementById("rsvpForm");
 const submitButton = document.getElementById("submitButton");
 const formStatus = document.getElementById("formStatus");
+const confirmationScreen = document.getElementById("confirmationScreen");
+const rsvpHeading = document.querySelector(".content h2");
+const rsvpHelper = document.querySelector(".content .helper");
 const familyCountWrap = document.getElementById("familyCountWrap");
 const familyCount = document.getElementById("familyCount");
 const guestCountNote = document.getElementById("guestCountNote");
@@ -189,11 +212,15 @@ form.addEventListener("submit",async function(event){
   try{
     // no-cors responses are opaque; a resolved request cannot independently confirm a row was written.
     await fetch(RSVP_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data),redirect:"follow"});
-    formStatus.textContent="Thank you! Your RSVP has been sent. Please contact the hosts if you need confirmation.";
-    formStatus.style.color="var(--gold-dark)";
-    form.reset();
-    document.getElementById("event4").checked=true;document.getElementById("event5").checked=true;
-    document.getElementById("vibeFamily").checked=true;familyCount.value="0";updatePartyOptions();
+    // Show a dedicated thank-you view instead of resetting and displaying the form again.
+    document.getElementById("confirmationName").textContent=data.name;
+    form.hidden=true;
+    rsvpHeading.hidden=true;
+    rsvpHelper.hidden=true;
+    formStatus.textContent="";
+    confirmationScreen.hidden=false;
+    confirmationScreen.focus();
+    confirmationScreen.scrollIntoView({behavior:"smooth",block:"center"});
   }catch(error){
     console.error("RSVP submission error:",error);
     formStatus.textContent="We couldn’t send your RSVP. Please try again or contact the hosts.";formStatus.style.color="#a33";
