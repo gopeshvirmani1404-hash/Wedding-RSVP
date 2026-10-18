@@ -212,15 +212,16 @@ form.addEventListener("submit",async function(event){
   try{
     // no-cors responses are opaque; a resolved request cannot independently confirm a row was written.
     await fetch(RSVP_ENDPOINT,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data),redirect:"follow"});
-    // Show a dedicated thank-you view instead of resetting and displaying the form again.
+    // Keep the existing wedding design intact; replace the RSVP fields with the thank-you view.
     document.getElementById("confirmationName").textContent=data.name;
-    form.hidden=true;
-    rsvpHeading.hidden=true;
-    rsvpHelper.hidden=true;
-    formStatus.textContent="";
-    confirmationScreen.hidden=false;
-    confirmationScreen.focus();
-    confirmationScreen.scrollIntoView({behavior:"smooth",block:"center"});
+    form.hidden = true;
+    rsvpHeading.hidden = true;
+    rsvpHelper.hidden = true;
+    formStatus.textContent = "";
+    confirmationScreen.hidden = false;
+    confirmationScreen.focus({ preventScroll: true });
+    // Keep the floral hero visible and bring the confirmation into view beneath it.
+    document.querySelector(".content").scrollIntoView({ behavior: "smooth", block: "start" });
   }catch(error){
     console.error("RSVP submission error:",error);
     formStatus.textContent="We couldn’t send your RSVP. Please try again or contact the hosts.";formStatus.style.color="#a33";
